@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  api:
+    container_name: tldw
+    build:
+      context: .
+      args:
+        REQUIREMENTS_FILE: dev-requirements.txt
+    env_file:
+    - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/app

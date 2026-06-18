@@ -1,0 +1,52 @@
+default_language_version:
+  node: "20.18.0"
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        args: []
+
+  - repo: https://github.com/myint/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args:
+          [
+            --in-place,
+            --remove-all-unused-imports,
+            --ignore-init-module-imports,
+            -r,
+            --exclude,
+            base.py,
+            .,
+          ]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-breakpoint
+          - flake8-print
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black"]
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.56.0
+    hooks:
+      - id: eslint
+        files: frontend/.*\.(js|jsx|ts|tsx)$
+        types: [file]
+        args: ["--fix"]
+        additional_dependencies:
+          - eslint@8.56.0
+          - eslint-plugin-react
+          - eslint-plugin-react-hooks
+          - typescript
+          - "@typescript-eslint/parser"
