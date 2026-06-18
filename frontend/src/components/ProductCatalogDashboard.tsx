@@ -4,32 +4,54 @@ import { ChevronUp, ChevronDown, Check } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 
-export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', searchTerm = '', viewMode = 'grid' }) {
+interface Product {
+  id: string;
+  title: string;
+  brand: string;
+  itemNumber: string;
+  programTypes: string[];
+  price: number | null;
+  warehousePrice: number | null;
+  warehouseAvailability: string | null;
+  marketingKeywords: string[];
+  image: string | null;
+  uri: string;
+  inventoryStatus?: string;
+}
+
+interface ProductCatalogDashboardProps {
+  rawData: any[];
+  mode: 'deals' | 'search';
+  searchTerm: string;
+  viewMode: 'grid' | 'table';
+}
+
+export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', searchTerm = '', viewMode = 'grid' }: ProductCatalogDashboardProps) {
   // State Management
   const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
-  const [selectedProgramTypes, setSelectedProgramTypes] = useState([]);
-  const [clearanceScannerEnabled, setClearanceScannerEnabled] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>([]);
+  const [clearanceScannerEnabled, setClearanceScannerEnabled] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   // Parse and transform data using the correct transformer based on mode
-  const data = useMemo(() => {
+  const data: Product[] = useMemo(() => {
     const transformer = mode === 'search' ? transformSearchProductData : transformProductData;
     return (rawData || []).map(transformer);
   }, [rawData, mode]);
 
   // Extract unique program types for filter
-  const uniqueProgramTypes = useMemo(() => {
-    const types = new Set();
+  const uniqueProgramTypes: string[] = useMemo(() => {
+    const types = new Set<string>();
     data.forEach((item) => {
-      item.programTypes.forEach((pt) => types.add(pt));
+      item.programTypes.forEach((pt: string) => types.add(pt));
     });
     return Array.from(types).sort();
   }, [data]);
 
   // Filter and Sort Data
   const processedData = useMemo(() => {
-    let filtered = [...data];
+    let filtered: Product[] = [...data];
 
     // 1. Text Search Filter (uses searchTerm passed from App)
     if (searchTerm) {
@@ -45,7 +67,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     // 2. Program Types Filter
     if (selectedProgramTypes.length > 0) {
       filtered = filtered.filter((item) =>
-        item.programTypes.some((pt) => selectedProgramTypes.includes(pt))
+        item.programTypes.some((pt: string) => selectedProgramTypes.includes(pt))
       );
     }
 
@@ -53,7 +75,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     if (clearanceScannerEnabled) {
       filtered = filtered.filter((item) => {
         const is97 = item.price && item.price.toFixed(2).endsWith('.97');
-        const hasMarketing = item.marketingKeywords.some((kw) => kw.toLowerCase().includes('whilesupplieslast'));
+        const hasMarketing = item.marketingKeywords.some((kw: string) => kw.toLowerCase().includes('whilesupplieslast'));
         return is97 || hasMarketing;
       });
     }
@@ -61,8 +83,8 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     // 4. Sorting (skip in search mode — API handles sort order)
     if (mode !== 'search') {
       filtered.sort((a, b) => {
-        let valA = a[sortConfig.key];
-        let valB = b[sortConfig.key];
+        let valA = a[sortConfig.key as keyof Product];
+        let valB = b[sortConfig.key as keyof Product];
 
         // Handle missing/null values (push them to the bottom)
         if (valA === null || valA === undefined) return 1;
@@ -90,7 +112,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
   }, [processedData, currentPage]);
 
   // Handlers
-  const handleSort = (key) => {
+  const handleSort = (key: string) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -107,7 +129,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
         {mode === 'search' && searchTerm && (
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-gray-800">
-              Search Results <span className="text-gray-500 font-normal">for "{searchTerm}"</span>
+              Search Results <span className="text-gray-500 font-normal">for &quot;{searchTerm}&quot;</span>
             </h2>
           </div>
         )}

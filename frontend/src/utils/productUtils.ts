@@ -1,4 +1,4 @@
-export function transformProductData(item) {
+export function transformProductData(item: any) {
   const id = item?.id ?? 'N/A';
   const title = item?.product?.title ?? 'No Title';
   const brand = item?.product?.brands?.[0] ?? 'No Brand';
@@ -32,7 +32,7 @@ export function transformProductData(item) {
  * Transform items from the warehouse-mode search API (/search endpoint).
  * Response shape: { count, items: [{ itemNumber, itemDescription, sellPrice, ... }] }
  */
-export function transformSearchProductData(item) {
+export function transformSearchProductData(item: any) {
   const id = item?.itemNumber ?? 'N/A';
   const title = item?.itemSign || item?.itemDescription || 'No Title';
   const itemNumber = item?.itemNumber ?? 'N/A';

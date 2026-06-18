@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, FormEvent } from 'react';
 import ProductCatalogDashboard from './components/ProductCatalogDashboard';
 import WarehouseOnboarding from './components/WarehouseOnboarding';
 import { LayoutGrid, List, Search } from 'lucide-react';
@@ -11,8 +11,13 @@ const SEARCH_SORT_OPTIONS = [
   { label: 'Stock Status', sortField: 'inventoryStatus', sortDirection: 'asc' },
 ];
 
+interface Warehouse {
+  salesLocationId: string;
+  name: { value: string }[][];
+}
+
 function App() {
-  const [warehouse, setWarehouse] = useState(() => {
+  const [warehouse, setWarehouse] = useState<Warehouse | null>(() => {
     try {
       const stored = localStorage.getItem('costco_warehouse');
       return stored ? JSON.parse(stored) : null;
@@ -20,44 +25,57 @@ function App() {
       return null;
     }
   });
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [mode, setMode] = useState('deals'); // 'deals' | 'search'
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchSubmitted, setSearchSubmitted] = useState(false);
-  const [activeSearchTerm, setActiveSearchTerm] = useState('');
-  const [searchSortIndex, setSearchSortIndex] = useState(0); // index into SEARCH_SORT_OPTIONS
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'deals' | 'search'>('deals');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchSubmitted, setSearchSubmitted] = useState<boolean>(false);
+  const [activeSearchTerm, setActiveSearchTerm] = useState<string>('');
+  const [searchSortIndex, setSearchSortIndex] = useState<number>(0); // index into SEARCH_SORT_OPTIONS
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-  // Fetch deals on mount
   useEffect(() => {
-    if (mode === 'deals' && warehouse) {
-      setLoading(true);
-      setError(null);
-      fetch(`${API_URL}/costco?warehouse=${warehouse.salesLocationId}`)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          const results = data?.searchResult?.results || [];
-          setProducts(results);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error("Error fetching live data:", err);
-          setError(err.message);
-          setLoading(false);
-        });
+    if (mode !== 'deals' || !warehouse) {
+      return;
     }
+
+    const abortController = new AbortController();
+    const { signal } = abortController;
+    
+    // eslint-disable-next-line
+    setLoading(true); 
+    setError(null);
+
+    fetch(`${API_URL}/costco?warehouse=${warehouse.salesLocationId}`, { signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        const results = data?.searchResult?.results || [];
+        setProducts(results);
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching live data:', err);
+          setError(err.message);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+    return () => {
+      abortController.abort();
+    };
   }, [mode, warehouse, API_URL]);
 
   // Perform search API call
-  const doSearch = useCallback((keyword, sortIdx) => {
-    if (!keyword.trim()) return;
+  const doSearch = useCallback((keyword: string, sortIdx: number) => {
+    if (!keyword.trim() || !warehouse) return;
 
     setLoading(true);
     setError(null);
@@ -91,7 +109,7 @@ function App() {
   }, [API_URL, warehouse]);
 
   // Search form submit (only used in search mode)
-  const handleSearchSubmit = useCallback((e) => {
+  const handleSearchSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();
     if (mode === 'search') {
       doSearch(searchQuery, searchSortIndex);
@@ -99,14 +117,14 @@ function App() {
   }, [searchQuery, searchSortIndex, doSearch, mode]);
 
   // Re-search when sort changes (only if already searched)
-  const handleSortChange = useCallback((newIdx) => {
+  const handleSortChange = useCallback((newIdx: number) => {
     setSearchSortIndex(newIdx);
     if (searchSubmitted && activeSearchTerm) {
       doSearch(activeSearchTerm, newIdx);
     }
   }, [searchSubmitted, activeSearchTerm, doSearch]);
 
-  const handleModeSwitch = (newMode) => {
+  const handleModeSwitch = (newMode: 'deals' | 'search') => {
     if (newMode === mode) return;
     setMode(newMode);
     setProducts([]);
@@ -117,13 +135,15 @@ function App() {
     setError(null);
     if (newMode === 'search') {
       setLoading(false);
+    } else {
+      setLoading(true);
     }
   };
 
   if (!warehouse) {
     return (
       <WarehouseOnboarding 
-        onComplete={(selected) => {
+        onComplete={(selected: Warehouse) => {
           localStorage.setItem('costco_warehouse', JSON.stringify(selected));
           setWarehouse(selected);
         }} 
@@ -141,9 +161,9 @@ function App() {
           <div className="flex items-center justify-between">
             {/* Title - Top Left */}
             <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave's Dank Costco Discoveries</h1>
+              <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave&apos;s Dank Costco Discoveries</h1>
               <div className="flex items-center text-sm text-gray-500 font-medium">
-                📍 {warehouse.name?.[0]?.value || 'Costco Warehouse'} 
+                📍 {warehouse.name?.[0]?.[0]?.value || 'Costco Warehouse'} 
                 <button 
                   onClick={() => {
                     localStorage.removeItem('costco_warehouse');
@@ -252,7 +272,7 @@ function App() {
           <div className="text-center">
             <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-costco-blue border-t-transparent mb-3"></div>
             <div className="text-lg text-costco-blue font-semibold">
-              {mode === 'deals' ? 'Loading live catalog...' : 'Searching Costco...'}
+              {mode === 'deals' ? 'Loading live deals...' : 'Searching Costco...'}
             </div>
           </div>
         </div>

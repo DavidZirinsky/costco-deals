@@ -1,15 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { Search, MapPin, Clock, Navigation } from 'lucide-react';
 
-export default function WarehouseOnboarding({ onComplete }) {
-  const [location, setLocation] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [warehouses, setWarehouses] = useState([]);
+interface Warehouse {
+  salesLocationId: string;
+  name: { value: string }[][];
+  distance: number;
+  distanceUnit: string;
+  address: {
+    line1: string;
+    city: string;
+    territory: string;
+    postalCode: string;
+  };
+  hours: { close: string }[];
+}
+
+interface WarehouseOnboardingProps {
+  onComplete: (warehouse: Warehouse) => void;
+}
+
+export default function WarehouseOnboarding({ onComplete }: WarehouseOnboardingProps) {
+  const [location, setLocation] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-  const handleSearch = async (e) => {
+  const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
     if (!location.trim()) return;
 
@@ -30,14 +48,14 @@ export default function WarehouseOnboarding({ onComplete }) {
       } else {
         setWarehouses(results);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || "An error occurred while searching for warehouses.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelect = (warehouse) => {
+  const handleSelect = (warehouse: Warehouse) => {
     onComplete(warehouse);
   };
 
@@ -46,7 +64,7 @@ export default function WarehouseOnboarding({ onComplete }) {
       
       {/* Site Title */}
       <div className="absolute top-6 left-6">
-        <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave's Dank Costco Discoveries</h1>
+        <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave&apos;s Dank Costco Discoveries</h1>
       </div>
 
       {/* Main Container */}
@@ -111,7 +129,7 @@ export default function WarehouseOnboarding({ onComplete }) {
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h4 className="text-lg font-bold text-gray-900 group-hover:text-costco-blue transition-colors leading-tight">
-                      {wh.name?.[0]?.value || 'Costco Warehouse'}
+                      {wh.name?.[0]?.[0]?.value || 'Costco Warehouse'}
                     </h4>
                     {wh.distance && (
                       <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 bg-blue-50 text-costco-blue rounded-full whitespace-nowrap">
