@@ -1,10 +1,10 @@
-import globals from 'globals/index.js';
-import tseslint from 'typescript-eslint';
-import pluginReact from 'eslint-plugin-react';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginReactRefresh from 'eslint-plugin-react-refresh';
+const globals = require('globals');
+const tseslint = require('typescript-eslint');
+const pluginReact = require('eslint-plugin-react');
+const pluginReactHooks = require('eslint-plugin-react-hooks');
+const pluginReactRefresh = require('eslint-plugin-react-refresh').default;
 
-export default tseslint.config(
+module.exports = tseslint.config(
   {
     ignores: ['dist', 'node_modules'],
   },

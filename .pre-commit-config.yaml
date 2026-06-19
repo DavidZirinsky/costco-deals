@@ -43,7 +43,7 @@ repos:
       - id: eslint
         files: frontend/.*\.(js|jsx|ts|tsx)$
         types: [file]
-        args: ["--fix", "--config", "frontend/eslint.config.js"]
+        args: ["--fix", "--config", "frontend/eslint.config.cjs"]
         additional_dependencies:
           - eslint@9.6.0
           - typescript-eslint
