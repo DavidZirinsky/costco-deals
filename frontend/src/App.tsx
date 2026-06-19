@@ -34,6 +34,7 @@ function App() {
   const [activeSearchTerm, setActiveSearchTerm] = useState<string>('');
   const [searchSortIndex, setSearchSortIndex] = useState<number>(0); // index into SEARCH_SORT_OPTIONS
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [dealsSortConfig, setDealsSortConfig] = useState({ key: 'price', direction: 'asc' });
   
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -161,14 +162,14 @@ function App() {
     <div className="App">
       {/* Mode Toggle Bar */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-3 sm:py-3 flex flex-col gap-2 sm:gap-3">
           
           {/* Top Row: Title & Toggle */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
             {/* Title - Top Left */}
-            <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold text-costco-blue tracking-tight">Dave&apos;s Dank Costco Discoveries</h1>
-              <div className="flex items-center text-sm text-gray-500 font-medium">
+            <div className="flex flex-col gap-0.5 sm:gap-1">
+              <h1 className="text-lg sm:text-xl font-bold text-costco-blue tracking-tight leading-tight">Dave&apos;s Dank Costco Discoveries</h1>
+              <div className="flex items-center text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
                 📍 You&apos;re Shopping: {warehouse.name?.[0]?.value || 'Costco Warehouse'} 
                 <button 
                   onClick={() => {
@@ -207,46 +208,71 @@ function App() {
             </div>
           </div>
 
-          {/* Bottom Row: Search & View Toggle */}
+          {/* Bottom Row: Search, Sort & View Toggle */}
           <div className="flex items-center gap-3 w-full">
+            
+            {/* Sorting for Deals (Grid View) */}
+            {mode === 'deals' && viewMode === 'grid' && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500 font-sans whitespace-nowrap">Sort:</span>
+                <select
+                  value={`${dealsSortConfig.key}-${dealsSortConfig.direction}`}
+                  onChange={(e) => {
+                    const [key, direction] = e.target.value.split('-');
+                    setDealsSortConfig({ key, direction });
+                  }}
+                  className="py-1.5 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue cursor-pointer shadow-sm hover:border-gray-400 transition-colors font-sans w-full max-w-[200px]"
+                >
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="title-asc">Title: A to Z</option>
+                  <option value="title-desc">Title: Z to A</option>
+                  <option value="brand-asc">Brand: A to Z</option>
+                  <option value="brand-desc">Brand: Z to A</option>
+                </select>
+              </div>
+            )}
+
             {/* Unified Search Input */}
+             {mode === 'search' && (
             <form onSubmit={handleSearchSubmit} className="flex flex-1 gap-2 w-full items-center">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-4 w-4 text-gray-400" />
                 </div>
-                <input
-                  type="text"
-                  placeholder={mode === 'search' ? "Search Costco warehouse products by name or item # (e.g. butter)..." : "Filter Title, Brand"}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue sm:text-sm transition-shadow"
-                  autoFocus
-                />
+               
+                  <input
+                    type="text"
+                    placeholder={"Search Costco warehouse products by name or item # (e.g. butter)..." }
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue sm:text-sm transition-shadow"
+                    autoFocus
+                  />
+              
               </div>
-
-              {/* Extra Controls based on Mode */}
               {mode === 'search' && (
-                <>
-                  <select
-                    value={searchSortIndex}
-                    onChange={(e) => handleSortChange(Number(e.target.value))}
-                    className="py-2 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue cursor-pointer hidden sm:block"
-                  >
-                    {SEARCH_SORT_OPTIONS.map((opt, idx) => (
-                      <option key={idx} value={idx}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={!searchQuery.trim()}
-                    className="px-5 py-2 bg-costco-red text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-costco-red focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm shadow-sm whitespace-nowrap"
-                  >
-                    Search
-                  </button>
-                </>
+                  <>
+                    <select
+                      value={searchSortIndex}
+                      onChange={(e) => handleSortChange(Number(e.target.value))}
+                      className="py-2 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue cursor-pointer hidden sm:block"
+                    >
+                      {SEARCH_SORT_OPTIONS.map((opt, idx) => (
+                        <option key={idx} value={idx}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={!searchQuery.trim()}
+                      className="px-5 py-2 bg-costco-red text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-costco-red focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm shadow-sm whitespace-nowrap"
+                    >
+                      Search
+                    </button>
+                  </>
+                )}
+              </form>
               )}
-            </form>
 
             {/* View Toggle - Top Right */}
             <div className={`bg-gray-100 p-1 rounded-lg ml-auto flex-shrink-0 ${mode === 'deals' ? 'hidden sm:flex' : 'flex'}`}>
@@ -308,6 +334,8 @@ function App() {
           mode={mode}
           searchTerm={mode === 'search' ? activeSearchTerm : searchQuery}
           viewMode={viewMode}
+          dealsSortConfig={dealsSortConfig}
+          onDealsSortChange={(key, direction) => setDealsSortConfig({ key, direction })}
         />
       )}
     </div>

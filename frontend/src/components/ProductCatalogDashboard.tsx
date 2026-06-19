@@ -24,12 +24,17 @@ interface ProductCatalogDashboardProps {
   mode: 'deals' | 'search';
   searchTerm: string;
   viewMode: 'grid' | 'table';
+  dealsSortConfig: { key: string; direction: string };
+  onDealsSortChange: (key: string, direction: string) => void;
 }
 
-export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', searchTerm = '', viewMode = 'grid' }: ProductCatalogDashboardProps) {
+export default function ProductCatalogDashboard({ 
+  rawData = [], mode = 'deals', searchTerm = '', viewMode = 'grid',
+  dealsSortConfig = { key: 'title', direction: 'asc' }, onDealsSortChange = () => {}
+}: ProductCatalogDashboardProps) {
   // State Management
-  const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
   const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>([]);
+
   const [clearanceScannerEnabled, setClearanceScannerEnabled] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -83,8 +88,8 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     // 4. Sorting (skip in search mode — API handles sort order)
     if (mode !== 'search') {
       filtered.sort((a, b) => {
-        let valA = a[sortConfig.key as keyof Product];
-        let valB = b[sortConfig.key as keyof Product];
+        let valA = a[dealsSortConfig.key as keyof Product];
+        let valB = b[dealsSortConfig.key as keyof Product];
 
         // Handle missing/null values (push them to the bottom)
         if (valA === null || valA === undefined) return 1;
@@ -94,14 +99,14 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
         if (typeof valA === 'string') valA = valA.toLowerCase();
         if (typeof valB === 'string') valB = valB.toLowerCase();
 
-        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (valA < valB) return dealsSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return dealsSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
 
     return filtered;
-  }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, sortConfig, mode]);
+  }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, dealsSortConfig, mode]);
 
   // Pagination
   const totalPages = Math.ceil(processedData.length / PAGE_SIZE) || 1;
@@ -111,19 +116,24 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     return processedData.slice(start, end);
   }, [processedData, currentPage]);
 
+  // Reset page when sort config changes from parent
+  React.useEffect(() => {
+    // eslint-disable-next-line
+    setCurrentPage(1);
+  }, [dealsSortConfig]);
+
   // Handlers
   const handleSort = (key: string) => {
     let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    if (dealsSortConfig.key === key && dealsSortConfig.direction === 'asc') {
       direction = 'desc';
     }
-    setSortConfig({ key, direction });
-    setCurrentPage(1);
+    onDealsSortChange(key, direction);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-6 font-sans text-gray-800">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
 
         {/* Content Section */}
         {mode === 'search' && searchTerm && (
@@ -133,6 +143,9 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
             </h2>
           </div>
         )}
+
+        {/* Removed Sorting Dropdown for Grid View from here, moved to App.tsx Header */}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {processedData.length === 0 ? (
             <div className="p-12 text-center text-gray-500">No items found matching your criteria.</div>
@@ -183,30 +196,30 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
               <table className="w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('title')}>
+                    <th scope="col" className="w-20 sm:w-32 px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                    <th scope="col" className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('title')}>
                       <div className="flex items-center">
                         Title
-                        {sortConfig.key === 'title' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                        {dealsSortConfig.key === 'title' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                       </div>
                     </th>
                     {mode === 'deals' ? (
                       <th scope="col" className="hidden sm:table-cell w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('brand')}>
                         <div className="flex items-center">
                           Brand
-                          {sortConfig.key === 'brand' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                          {dealsSortConfig.key === 'brand' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                         </div>
                       </th>
                     ) : null}
                     <th scope="col" className="hidden sm:table-cell w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('itemNumber')}>
                       <div className="flex items-center">
                         Item #
-                        {sortConfig.key === 'itemNumber' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                        {dealsSortConfig.key === 'itemNumber' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                       </div>
                     </th>
-                    <th scope="col" className="w-24 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('price')}>
+                    <th scope="col" className="w-24 sm:w-44 px-2 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('price')}>
                       <div className="flex items-center justify-end">
-                        {sortConfig.key === 'price' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="mr-1" /> : <ChevronDown size={14} className="mr-1" />)}
+                        {dealsSortConfig.key === 'price' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="mr-1" /> : <ChevronDown size={14} className="mr-1" />)}
                         Price
                       </div>
                     </th>
@@ -215,17 +228,17 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                 <tbody className="bg-white divide-y divide-gray-200">
                   {paginatedData.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-2 whitespace-nowrap">
+                      <td className="px-2 sm:px-6 py-2 whitespace-nowrap">
                         {item.image ? (
-                          <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block h-20 w-20 flex-shrink-0 bg-white border rounded p-1 transition-opacity ${mode === 'deals' ? 'hover:opacity-80' : ''}`}>
+                          <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 bg-white border rounded p-1 transition-opacity ${mode === 'deals' ? 'hover:opacity-80' : ''}`}>
                             <img src={item.image} alt="" className="h-full w-full object-contain mix-blend-multiply" />
                           </a>
                         ) : (
-                          <div className="h-20 w-20 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">N/A</div>
+                          <div className="h-16 w-16 sm:h-20 sm:w-20 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">N/A</div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                        <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block text-sm font-medium text-gray-900 truncate ${mode === 'deals' ? 'hover:text-costco-blue hover:underline' : ''}`} title={item.title}>{item.title}</a>
+                      <td className="px-2 sm:px-6 py-4 overflow-hidden text-ellipsis">
+                        <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block text-sm font-medium text-gray-900 line-clamp-2 sm:truncate ${mode === 'deals' ? 'hover:text-costco-blue hover:underline' : ''}`} title={item.title}>{item.title}</a>
                       </td>
                       {mode === 'deals' ? (
                         <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
@@ -235,7 +248,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                       <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.itemNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-2 sm:px-6 py-4 text-right text-sm font-medium">
                         <div className="flex flex-col items-end gap-1">
                           {item.price ? (
                             <span className={item.price.toFixed(2).endsWith('.97') ? "text-costco-red font-bold" : "text-gray-900"}>
@@ -246,7 +259,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                           )}
                           {mode === 'search' ? (
                             item.inventoryStatus && (
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${item.warehouseAvailability === 'IN_STOCK'
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${item.warehouseAvailability === 'IN_STOCK'
                                 ? 'text-green-700 bg-green-50 border border-green-200'
                                 : 'text-red-700 bg-red-50 border border-red-200'
                                 }`}>
@@ -255,7 +268,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                             )
                           ) : (
                             item.warehousePrice && (item.warehouseAvailability === 'LOW_STOCK' || item.warehouseAvailability === 'IN_STOCK') && (
-                              <span className="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded">In Warehouse: ${item.warehousePrice.toFixed(2)}</span>
+                              <span className="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded whitespace-nowrap">in Warehouse: ${item.warehousePrice.toFixed(2)}</span>
                             )
                           )}
                         </div>
