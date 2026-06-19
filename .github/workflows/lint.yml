@@ -1,0 +1,38 @@
+name: Lint
+permissions:
+  checks: write
+  contents: write
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-linters:
+    name: Run pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+      - name: Fail if pre-commit made changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "pre-commit made changes. Please run pre-commit locally and commit the changes."
+            git diff
+            exit 1
+          fi

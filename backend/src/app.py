@@ -33,7 +33,7 @@ class SortDirection(str, Enum):
 
 @app.get("/")
 def status():
-    return {"status": "ok", "service": "tldw"}
+    return {"status": "ok", "service": "costco-deals"}
 
 
 @app.get("/search")
@@ -68,7 +68,7 @@ def search(
         "Connection": "Keep-Alive",
     }
 
-    response = requests.request("POST", url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=payload)
     return JSONResponse(status_code=response.status_code, content=response.json())
 
 
@@ -138,7 +138,7 @@ def summarize(
         "Connection": "Keep-Alive",
     }
 
-    response = requests.request("POST", url, headers=headers, json=payload)
+    response = requests.post(url, headers=headers, json=payload)
     return JSONResponse(status_code=response.status_code, content=response.json())
 
 
