@@ -196,8 +196,8 @@ export default function ProductCatalogDashboard({
               <table className="w-full divide-y divide-gray-200 table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('title')}>
+                    <th scope="col" className="w-20 sm:w-32 px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                    <th scope="col" className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('title')}>
                       <div className="flex items-center">
                         Title
                         {dealsSortConfig.key === 'title' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
@@ -217,7 +217,7 @@ export default function ProductCatalogDashboard({
                         {dealsSortConfig.key === 'itemNumber' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                       </div>
                     </th>
-                    <th scope="col" className="w-24 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('price')}>
+                    <th scope="col" className="w-24 sm:w-44 px-2 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('price')}>
                       <div className="flex items-center justify-end">
                         {dealsSortConfig.key === 'price' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="mr-1" /> : <ChevronDown size={14} className="mr-1" />)}
                         Price
@@ -228,17 +228,17 @@ export default function ProductCatalogDashboard({
                 <tbody className="bg-white divide-y divide-gray-200">
                   {paginatedData.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-2 whitespace-nowrap">
+                      <td className="px-2 sm:px-6 py-2 whitespace-nowrap">
                         {item.image ? (
-                          <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block h-20 w-20 flex-shrink-0 bg-white border rounded p-1 transition-opacity ${mode === 'deals' ? 'hover:opacity-80' : ''}`}>
+                          <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 bg-white border rounded p-1 transition-opacity ${mode === 'deals' ? 'hover:opacity-80' : ''}`}>
                             <img src={item.image} alt="" className="h-full w-full object-contain mix-blend-multiply" />
                           </a>
                         ) : (
-                          <div className="h-20 w-20 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">N/A</div>
+                          <div className="h-16 w-16 sm:h-20 sm:w-20 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">N/A</div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                        <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block text-sm font-medium text-gray-900 truncate ${mode === 'deals' ? 'hover:text-costco-blue hover:underline' : ''}`} title={item.title}>{item.title}</a>
+                      <td className="px-2 sm:px-6 py-4 overflow-hidden text-ellipsis">
+                        <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block text-sm font-medium text-gray-900 line-clamp-2 sm:truncate ${mode === 'deals' ? 'hover:text-costco-blue hover:underline' : ''}`} title={item.title}>{item.title}</a>
                       </td>
                       {mode === 'deals' ? (
                         <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
@@ -248,7 +248,7 @@ export default function ProductCatalogDashboard({
                       <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.itemNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-2 sm:px-6 py-4 text-right text-sm font-medium">
                         <div className="flex flex-col items-end gap-1">
                           {item.price ? (
                             <span className={item.price.toFixed(2).endsWith('.97') ? "text-costco-red font-bold" : "text-gray-900"}>
@@ -259,7 +259,7 @@ export default function ProductCatalogDashboard({
                           )}
                           {mode === 'search' ? (
                             item.inventoryStatus && (
-                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${item.warehouseAvailability === 'IN_STOCK'
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${item.warehouseAvailability === 'IN_STOCK'
                                 ? 'text-green-700 bg-green-50 border border-green-200'
                                 : 'text-red-700 bg-red-50 border border-red-200'
                                 }`}>
@@ -268,7 +268,7 @@ export default function ProductCatalogDashboard({
                             )
                           ) : (
                             item.warehousePrice && (item.warehouseAvailability === 'LOW_STOCK' || item.warehouseAvailability === 'IN_STOCK') && (
-                              <span className="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded">In Warehouse: ${item.warehousePrice.toFixed(2)}</span>
+                              <span className="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded whitespace-nowrap">in Warehouse: ${item.warehousePrice.toFixed(2)}</span>
                             )
                           )}
                         </div>
