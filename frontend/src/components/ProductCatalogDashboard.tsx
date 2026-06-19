@@ -133,6 +133,37 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
             </h2>
           </div>
         )}
+
+        {mode === 'deals' && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            
+            {/* Sorting for Grid View */}
+            {viewMode === 'grid' && (
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <span className="text-sm font-medium text-gray-500 font-sans">Sort:</span>
+                <select
+                  value={`${sortConfig.key}-${sortConfig.direction}`}
+                  onChange={(e) => {
+                    const [key, direction] = e.target.value.split('-');
+                    setSortConfig({ key, direction });
+                    setCurrentPage(1);
+                  }}
+                  className="py-1.5 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue cursor-pointer shadow-sm hover:border-gray-400 transition-colors font-sans"
+                >
+                  <option value="title-asc">Title: A to Z</option>
+                  <option value="title-desc">Title: Z to A</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="brand-asc">Brand: A to Z</option>
+                  <option value="brand-desc">Brand: Z to A</option>
+                  <option value="itemNumber-asc">Item #: Low to High</option>
+                  <option value="itemNumber-desc">Item #: High to Low</option>
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {processedData.length === 0 ? (
             <div className="p-12 text-center text-gray-500">No items found matching your criteria.</div>
