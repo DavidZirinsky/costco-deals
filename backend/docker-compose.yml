@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   api:
-    container_name: tldw
+    container_name: costco-deals
     build:
       context: .
       args:
