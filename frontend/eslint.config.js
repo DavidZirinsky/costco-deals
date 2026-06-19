@@ -1,4 +1,4 @@
-import globals from 'globals';
+import globals from 'globals/index.js';
 import tseslint from 'typescript-eslint';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
