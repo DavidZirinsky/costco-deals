@@ -7,10 +7,10 @@ permissions:
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
 
 jobs:
   test:
