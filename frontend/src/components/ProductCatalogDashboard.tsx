@@ -58,9 +58,9 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
       const q = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (item) =>
-          item.title.toLowerCase().includes(q) ||
-          item.brand.toLowerCase().includes(q) ||
-          item.itemNumber.toLowerCase().includes(q)
+          (item.title || '').toLowerCase().includes(q) ||
+          (item.brand || '').toLowerCase().includes(q) ||
+          (item.itemNumber || '').toLowerCase().includes(q)
       );
     }
 
@@ -190,13 +190,15 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                         {sortConfig.key === 'title' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                       </div>
                     </th>
-                    <th scope="col" className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('brand')}>
-                      <div className="flex items-center">
-                        Brand
-                        {sortConfig.key === 'brand' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
-                      </div>
-                    </th>
-                    <th scope="col" className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('itemNumber')}>
+                    {mode === 'deals' ? (
+                      <th scope="col" className="hidden sm:table-cell w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('brand')}>
+                        <div className="flex items-center">
+                          Brand
+                          {sortConfig.key === 'brand' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                        </div>
+                      </th>
+                    ) : null}
+                    <th scope="col" className="hidden sm:table-cell w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('itemNumber')}>
                       <div className="flex items-center">
                         Item #
                         {sortConfig.key === 'itemNumber' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
@@ -225,10 +227,12 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                       <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
                         <a {...(mode === 'deals' ? { href: item.uri, target: "_blank", rel: "noreferrer" } : {})} className={`block text-sm font-medium text-gray-900 truncate ${mode === 'deals' ? 'hover:text-costco-blue hover:underline' : ''}`} title={item.title}>{item.title}</a>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
-                        <div className="text-sm text-gray-500 truncate" title={item.brand}>{item.brand}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {mode === 'deals' ? (
+                        <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap overflow-hidden text-ellipsis">
+                          <div className="text-sm text-gray-500 truncate" title={item.brand}>{item.brand}</div>
+                        </td>
+                      ) : null}
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.itemNumber}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

@@ -129,6 +129,9 @@ function App() {
   const handleModeSwitch = (newMode: 'deals' | 'search') => {
     if (newMode === mode) return;
     setMode(newMode);
+    if (newMode === 'deals') {
+      setViewMode('grid');
+    }
     setProducts([]);
     setSearchQuery('');
     setSearchSubmitted(false);
@@ -161,10 +164,10 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col gap-3">
           
           {/* Top Row: Title & Toggle */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0">
             {/* Title - Top Left */}
             <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave&apos;s Dank Costco Discoveries</h1>
+              <h1 className="text-xl font-bold text-costco-blue tracking-tight">Dave&apos;s Dank Costco Discoveries</h1>
               <div className="flex items-center text-sm text-gray-500 font-medium">
                 📍 You&apos;re Shopping: {warehouse.name?.[0]?.value || 'Costco Warehouse'} 
                 <button 
@@ -180,10 +183,10 @@ function App() {
             </div>
 
             {/* Toggle Pill */}
-            <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner flex-shrink-0">
+            <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner flex-shrink-0 w-full md:w-auto">
               <button
                 onClick={() => handleModeSwitch('deals')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                className={`flex-1 md:flex-none flex justify-center items-center px-1 md:px-4 py-1.5 rounded-lg text-[11px] md:text-sm font-semibold transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis ${
                   mode === 'deals'
                     ? 'bg-costco-blue text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700'
@@ -193,7 +196,7 @@ function App() {
               </button>
               <button
                 onClick={() => handleModeSwitch('search')}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                className={`flex-1 md:flex-none flex justify-center items-center px-1 md:px-4 py-1.5 rounded-lg text-[11px] md:text-sm font-semibold transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis ${
                   mode === 'search'
                     ? 'bg-costco-blue text-white shadow-md'
                     : 'text-gray-500 hover:text-gray-700'
@@ -246,7 +249,7 @@ function App() {
             </form>
 
             {/* View Toggle - Top Right */}
-            <div className="flex bg-gray-100 p-1 rounded-lg ml-auto flex-shrink-0">
+            <div className={`bg-gray-100 p-1 rounded-lg ml-auto flex-shrink-0 ${mode === 'deals' ? 'hidden sm:flex' : 'flex'}`}>
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}

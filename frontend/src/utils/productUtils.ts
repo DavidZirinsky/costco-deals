@@ -47,7 +47,6 @@ export function transformSearchProductData(item: any) {
   return {
     id,
     title,
-    brand: departmentName, // Use department as brand stand-in for display
     itemNumber,
     programTypes: [],
     price: sellPrice,
