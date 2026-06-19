@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { transformProductData, transformSearchProductData } from '../utils/productUtils';
 import { ChevronUp, ChevronDown, Check } from 'lucide-react';
 
@@ -108,19 +108,54 @@ export default function ProductCatalogDashboard({
     return filtered;
   }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, dealsSortConfig, mode]);
 
+  // Detect mobile for infinite scroll vs pagination
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Pagination
   const totalPages = Math.ceil(processedData.length / PAGE_SIZE) || 1;
   const paginatedData = useMemo(() => {
+    if (isMobile) {
+      // Infinite scroll: show all items up to current page
+      return processedData.slice(0, currentPage * PAGE_SIZE);
+    }
+    // Desktop: traditional single-page view
     const start = (currentPage - 1) * PAGE_SIZE;
     const end = start + PAGE_SIZE;
     return processedData.slice(start, end);
-  }, [processedData, currentPage]);
+  }, [processedData, currentPage, isMobile]);
 
-  // Reset page when sort config changes from parent
-  React.useEffect(() => {
+  const hasMore = currentPage < totalPages;
+
+  // Reset page when sort config or filters change
+  useEffect(() => {
     // eslint-disable-next-line
     setCurrentPage(1);
-  }, [dealsSortConfig]);
+  }, [dealsSortConfig, searchTerm, selectedProgramTypes, clearanceScannerEnabled, rawData]);
+
+  // Infinite scroll observer
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadMore = useCallback(() => {
+    setCurrentPage(p => Math.min(totalPages, p + 1));
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (!isMobile || !sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [isMobile, loadMore]);
 
   // Handlers
   const handleSort = (key: string) => {
@@ -280,6 +315,18 @@ export default function ProductCatalogDashboard({
             </div>
           )}
         </div>
+
+        {/* Infinite scroll sentinel for mobile */}
+        {isMobile && hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-6">
+            <div className="text-sm text-gray-400 animate-pulse">Loading more...</div>
+          </div>
+        )}
+        {isMobile && !hasMore && processedData.length > PAGE_SIZE && (
+          <div className="flex justify-center py-4">
+            <span className="text-xs text-gray-400">All {processedData.length} items loaded</span>
+          </div>
+        )}
 
         {/* Pagination Section */}
         {processedData.length > 0 && (
