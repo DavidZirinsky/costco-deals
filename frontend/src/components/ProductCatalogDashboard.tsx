@@ -157,6 +157,12 @@ export default function ProductCatalogDashboard({
     return () => observer.disconnect();
   }, [isMobile, loadMore]);
 
+  // Reset page when sort config changes from parent
+  React.useEffect(() => {
+    // eslint-disable-next-line
+    setCurrentPage(1);
+  }, [dealsSortConfig]);
+
   // Handlers
   const handleSort = (key: string) => {
     let direction = 'asc';
