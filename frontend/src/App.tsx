@@ -13,7 +13,7 @@ const SEARCH_SORT_OPTIONS = [
 
 interface Warehouse {
   salesLocationId: string;
-  name: { value: string }[][];
+  name: { value: string }[];
 }
 
 function App() {
@@ -44,7 +44,7 @@ function App() {
 
     const abortController = new AbortController();
     const { signal } = abortController;
-    
+
     // eslint-disable-next-line
     setLoading(true); 
     setError(null);
@@ -65,7 +65,9 @@ function App() {
         }
       })
       .finally(() => {
-        setLoading(false);
+        if (!signal.aborted) {
+          setLoading(false);
+        }
       });
 
     return () => {
@@ -150,6 +152,7 @@ function App() {
       />
     );
   }
+                {console.log(JSON.stringify(warehouse))}
 
   return (
     <div className="App">
@@ -163,7 +166,7 @@ function App() {
             <div className="flex flex-col gap-1">
               <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave&apos;s Dank Costco Discoveries</h1>
               <div className="flex items-center text-sm text-gray-500 font-medium">
-                📍 {warehouse.name?.[0]?.[0]?.value || 'Costco Warehouse'} 
+                📍 You&apos;re Shopping: {warehouse.name?.[0]?.value || 'Costco Warehouse'} 
                 <button 
                   onClick={() => {
                     localStorage.removeItem('costco_warehouse');

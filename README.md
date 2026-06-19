@@ -1,1 +1,1 @@
-test
+app docs can be seen: https://97costco.fly.dev/docs#/
