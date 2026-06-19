@@ -24,12 +24,17 @@ interface ProductCatalogDashboardProps {
   mode: 'deals' | 'search';
   searchTerm: string;
   viewMode: 'grid' | 'table';
+  dealsSortConfig: { key: string; direction: string };
+  onDealsSortChange: (key: string, direction: string) => void;
 }
 
-export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', searchTerm = '', viewMode = 'grid' }: ProductCatalogDashboardProps) {
+export default function ProductCatalogDashboard({ 
+  rawData = [], mode = 'deals', searchTerm = '', viewMode = 'grid',
+  dealsSortConfig = { key: 'title', direction: 'asc' }, onDealsSortChange = () => {}
+}: ProductCatalogDashboardProps) {
   // State Management
-  const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
   const [selectedProgramTypes, setSelectedProgramTypes] = useState<string[]>([]);
+
   const [clearanceScannerEnabled, setClearanceScannerEnabled] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -83,8 +88,8 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     // 4. Sorting (skip in search mode — API handles sort order)
     if (mode !== 'search') {
       filtered.sort((a, b) => {
-        let valA = a[sortConfig.key as keyof Product];
-        let valB = b[sortConfig.key as keyof Product];
+        let valA = a[dealsSortConfig.key as keyof Product];
+        let valB = b[dealsSortConfig.key as keyof Product];
 
         // Handle missing/null values (push them to the bottom)
         if (valA === null || valA === undefined) return 1;
@@ -94,14 +99,14 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
         if (typeof valA === 'string') valA = valA.toLowerCase();
         if (typeof valB === 'string') valB = valB.toLowerCase();
 
-        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (valA < valB) return dealsSortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return dealsSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
 
     return filtered;
-  }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, sortConfig, mode]);
+  }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, dealsSortConfig, mode]);
 
   // Pagination
   const totalPages = Math.ceil(processedData.length / PAGE_SIZE) || 1;
@@ -111,19 +116,24 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
     return processedData.slice(start, end);
   }, [processedData, currentPage]);
 
+  // Reset page when sort config changes from parent
+  React.useEffect(() => {
+    // eslint-disable-next-line
+    setCurrentPage(1);
+  }, [dealsSortConfig]);
+
   // Handlers
   const handleSort = (key: string) => {
     let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    if (dealsSortConfig.key === key && dealsSortConfig.direction === 'asc') {
       direction = 'desc';
     }
-    setSortConfig({ key, direction });
-    setCurrentPage(1);
+    onDealsSortChange(key, direction);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-6 font-sans text-gray-800">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
 
         {/* Content Section */}
         {mode === 'search' && searchTerm && (
@@ -134,35 +144,7 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
           </div>
         )}
 
-        {mode === 'deals' && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            
-            {/* Sorting for Grid View */}
-            {viewMode === 'grid' && (
-              <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="text-sm font-medium text-gray-500 font-sans">Sort:</span>
-                <select
-                  value={`${sortConfig.key}-${sortConfig.direction}`}
-                  onChange={(e) => {
-                    const [key, direction] = e.target.value.split('-');
-                    setSortConfig({ key, direction });
-                    setCurrentPage(1);
-                  }}
-                  className="py-1.5 px-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-costco-blue focus:border-costco-blue cursor-pointer shadow-sm hover:border-gray-400 transition-colors font-sans"
-                >
-                  <option value="title-asc">Title: A to Z</option>
-                  <option value="title-desc">Title: Z to A</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="brand-asc">Brand: A to Z</option>
-                  <option value="brand-desc">Brand: Z to A</option>
-                  <option value="itemNumber-asc">Item #: Low to High</option>
-                  <option value="itemNumber-desc">Item #: High to Low</option>
-                </select>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Removed Sorting Dropdown for Grid View from here, moved to App.tsx Header */}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {processedData.length === 0 ? (
@@ -218,26 +200,26 @@ export default function ProductCatalogDashboard({ rawData = [], mode = 'deals', 
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('title')}>
                       <div className="flex items-center">
                         Title
-                        {sortConfig.key === 'title' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                        {dealsSortConfig.key === 'title' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                       </div>
                     </th>
                     {mode === 'deals' ? (
                       <th scope="col" className="hidden sm:table-cell w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('brand')}>
                         <div className="flex items-center">
                           Brand
-                          {sortConfig.key === 'brand' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                          {dealsSortConfig.key === 'brand' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                         </div>
                       </th>
                     ) : null}
                     <th scope="col" className="hidden sm:table-cell w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('itemNumber')}>
                       <div className="flex items-center">
                         Item #
-                        {sortConfig.key === 'itemNumber' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
+                        {dealsSortConfig.key === 'itemNumber' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />)}
                       </div>
                     </th>
                     <th scope="col" className="w-24 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 group" onClick={() => handleSort('price')}>
                       <div className="flex items-center justify-end">
-                        {sortConfig.key === 'price' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} className="mr-1" /> : <ChevronDown size={14} className="mr-1" />)}
+                        {dealsSortConfig.key === 'price' && (dealsSortConfig.direction === 'asc' ? <ChevronUp size={14} className="mr-1" /> : <ChevronDown size={14} className="mr-1" />)}
                         Price
                       </div>
                     </th>
