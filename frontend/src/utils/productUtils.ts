@@ -12,6 +12,10 @@ export function transformProductData(item: any) {
   const marketingKeywords = item?.product?.attributes?.marketing_keywords?.text ?? [];
   const image = item?.product?.attributes?.primary_image?.text?.[0] ?? null;
   const uri = item?.product?.uri ?? '#';
+  
+  // Try to grab the first top-level category from category_names. If not, use 'Other'
+  const categoryNames = item?.product?.attributes?.category_names?.text || [];
+  const category = categoryNames.length > 0 ? categoryNames[0] : 'Other';
 
   return {
     id,
@@ -25,6 +29,7 @@ export function transformProductData(item: any) {
     marketingKeywords,
     image,
     uri,
+    category,
   };
 }
 
@@ -43,6 +48,9 @@ export function transformSearchProductData(item: any) {
   const image = item?.imageUrl ?? null;
   const uri = `https://www.costco.com/p/-/${itemNumber}`;
   const searchScore = item?.searchScore ? parseFloat(item.searchScore) : 0;
+  
+  // For search items, departmentName seems like a good fallback for category
+  const category = departmentName || 'Other';
 
   return {
     id,
@@ -59,5 +67,6 @@ export function transformSearchProductData(item: any) {
     uri,
     searchScore,
     departmentName,
+    category,
   };
 }
