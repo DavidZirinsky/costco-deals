@@ -24,15 +24,37 @@ Note on Fly: I've found that the smaller hosting companies tend to not have blan
 
 So it turns out that with a mobile app, seeing what requests they're making is a *little* harder than pulling out dev tools on a desktop browser. How I went from app -> idiot-proofed curl commands was by doing the following:
 
-1. Extract the apk from an android device with google play, transfer to your desktop.
-2. Install `npm install -g apk-mitm` then modify your apk with: `apk-mitm Costco.apk`
-3. Boot up an android emulator, I used the android studio emulator. Install the modified apk on it, for the android Studio emulator I just drag and dropped it. 
-4. Run `./mitmweb --mode regular@8082`
-5. Go to the Extended Controls (the three dots on the emulator sidebar) -> Settings -> Proxy.
-6. Uncheck "Use Android Studio HTTP proxy settings", select Manual proxy configuration, and enter your computer's IP address and the proxy port.
-7. Install the cert as a user cert on the emulator, you can view instructions from the android emulator's browser by going to `http://mitm.it`
-8. From the mitmproxy site, find your the api calls, and copy then as curl
-9. From there you'll have the values for various requests in the .env folder
+1.  **Extract the APK:**
+    Extract the apk from an Android device with Google Play, and transfer it to your desktop.
+
+2.  **Modify the APK:**
+    ```bash
+    npm install -g apk-mitm
+    apk-mitm Costco.apk
+    ```
+
+3.  **Boot up an Android emulator:**
+    I used the Android Studio emulator. Install the modified apk on it (for the Android Studio emulator, I just drag and dropped it).
+
+4.  **Run mitmweb:**
+    ```bash
+    ./mitmweb --mode regular@8082
+    ```
+
+5.  **Configure emulator proxy:**
+    Go to the Extended Controls (the three dots on the emulator sidebar) -> Settings -> Proxy.
+
+6.  **Set manual proxy:**
+    Uncheck "Use Android Studio HTTP proxy settings", select Manual proxy configuration, and enter your computer's IP address and the proxy port.
+
+7.  **Install the certificate:**
+    Install the cert as a user cert on the emulator. You can view instructions from the Android emulator's browser by going to `http://mitm.it`.
+
+8.  **Copy the API calls:**
+    From the mitmproxy site, find the API calls and copy them as curl commands.
+
+9.  **Update environment variables:**
+    From there, you'll have the values for various requests to populate your `.env` file.
 
 
 ### Installation
