@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { transformProductData, transformSearchProductData } from '../utils/productUtils';
-import { ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { ChevronUp, ChevronDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 
@@ -17,6 +17,7 @@ interface Product {
   image: string | null;
   uri: string;
   inventoryStatus?: string;
+  category?: string;
 }
 
 interface ProductCatalogDashboardProps {
@@ -38,6 +39,18 @@ export default function ProductCatalogDashboard({
   const [clearanceScannerEnabled, setClearanceScannerEnabled] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = 250;
+      categoryScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Parse and transform data using the correct transformer based on mode
   const data: Product[] = useMemo(() => {
@@ -52,6 +65,17 @@ export default function ProductCatalogDashboard({
       item.programTypes.forEach((pt: string) => types.add(pt));
     });
     return Array.from(types).sort();
+  }, [data]);
+
+  // Extract unique categories for filter
+  const uniqueCategories: string[] = useMemo(() => {
+    const categories = new Set<string>();
+    data.forEach((item) => {
+      if (item.category && item.category !== 'Other' && item.category !== '') {
+        categories.add(item.category);
+      }
+    });
+    return ['All', ...Array.from(categories).sort()];
   }, [data]);
 
   // Filter and Sort Data
@@ -85,6 +109,11 @@ export default function ProductCatalogDashboard({
       });
     }
 
+    // 4. Category Filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter((item) => item.category === selectedCategory);
+    }
+
     // 4. Sorting (skip in search mode — API handles sort order)
     if (mode !== 'search') {
       filtered.sort((a, b) => {
@@ -106,7 +135,7 @@ export default function ProductCatalogDashboard({
     }
 
     return filtered;
-  }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, dealsSortConfig, mode]);
+  }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, dealsSortConfig, mode, selectedCategory]);
 
   // Detect mobile for infinite scroll vs pagination
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
@@ -135,7 +164,7 @@ export default function ProductCatalogDashboard({
   useEffect(() => {
     // eslint-disable-next-line
     setCurrentPage(1);
-  }, [dealsSortConfig, searchTerm, selectedProgramTypes, clearanceScannerEnabled, rawData]);
+  }, [dealsSortConfig, searchTerm, selectedProgramTypes, clearanceScannerEnabled, rawData, selectedCategory]);
 
   // Infinite scroll observer
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -182,6 +211,48 @@ export default function ProductCatalogDashboard({
             <h2 className="text-xl font-semibold text-gray-800">
               Search Results <span className="text-gray-500 font-normal">for &quot;{searchTerm}&quot;</span>
             </h2>
+          </div>
+        )}
+
+        {/* Category Scroll Bar */}
+        {uniqueCategories.length > 1 && (
+          <div className="flex items-center gap-2 mb-2 w-full">
+            <button 
+              onClick={() => scrollCategories('left')} 
+              className="p-1.5 rounded-full bg-white shadow-sm border border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50 flex-shrink-0 focus:outline-none"
+              aria-label="Scroll categories left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            
+            <div 
+              ref={categoryScrollRef}
+              className="overflow-x-auto whitespace-nowrap pb-1 scrollbar-hide flex-1"
+            >
+              <div className="flex space-x-2">
+                {uniqueCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-4 py-1.5 rounded text-sm font-medium transition-colors border flex-shrink-0 ${
+                      selectedCategory === cat
+                        ? 'bg-costco-blue text-white border-costco-blue shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button 
+              onClick={() => scrollCategories('right')} 
+              className="p-1.5 rounded-full bg-white shadow-sm border border-gray-200 text-gray-500 hover:text-gray-800 hover:bg-gray-50 flex-shrink-0 focus:outline-none"
+              aria-label="Scroll categories right"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         )}
 
@@ -350,7 +421,7 @@ export default function ProductCatalogDashboard({
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Previous</span>
                     Previous
@@ -361,7 +432,7 @@ export default function ProductCatalogDashboard({
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Next</span>
                     Next
