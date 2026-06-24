@@ -7,8 +7,7 @@ See it in action [here](https://www.97cost.co/).
 
 View the api docs [here](https://97costco.fly.dev/docs#/).
 
-Under the hood this involved reverse engineering the costco mobile API, you can find more about that [here](#Prerequisite)
-
+Under the hood this involved reverse engineering the costco mobile API, you can find more about that [here](#prerequisites-getting-costco-auth-headers)
 
 
 ## 🛠️ Tech Stack
