@@ -70,8 +70,9 @@ export default function ProductCatalogDashboard({
   // Extract unique categories for filter
   const uniqueCategories: string[] = useMemo(() => {
     const categories = new Set<string>();
+    
     data.forEach((item) => {
-      if (item.category && item.category !== 'Other' && item.category !== '') {
+      if (item.category && item.category !== 'Other' && item.category !== '' && !item.category.toLowerCase().includes('ineligible')) {
         categories.add(item.category);
       }
     });
