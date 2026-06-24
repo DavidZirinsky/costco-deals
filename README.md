@@ -1,43 +1,48 @@
-app docs can be seen: https://97costco.fly.dev/docs#/
+# Costco Deals
+<img src="frontend/public/logo.png" alt="Coupon Clipper logo" height="300" />
 
-# TL;DW - AI-Powered YouTube Video Summaries
+**97cost.co** is a site that lets you browse costco clearance deals that are in your warehouse and available online. You can also browse costco's in warehouse catalog to help you price shop and plan for what's available. 
 
-![TL;DW Logo](frontend/public/logo-tech.png)
+See it in action [here](https://www.97cost.co/).
 
-**TL;DW** is a web application that saves you time by providing AI-powered summaries of YouTube videos. Paste a YouTube link and get the key takeaways instantly, without watching the whole video. See it in action [here](https://www.youtubetldw.com/)
+View the api docs [here](https://97costco.fly.dev/docs#/).
 
-This utilizes the python [tldw](https://github.com/DavidZirinsky/tl-dw/) library on the backend to get the YouTube summaries.
+Under the hood this involved reverse engineering the costco mobile API, you can find more about that [here](#Prerequisite)
 
-## ✨ Features
 
-- **AI-Powered Summaries:** Get concise and accurate summaries of any YouTube video.
-- **Streaming Responses:** See the summary generated in real-time.
-- **Sleek Interface:** A modern and user-friendly interface for a smooth experience.
-- **Time-Saving:** Avoids long intros, ads, and filler content to get straight to the point.
 
 ## 🛠️ Tech Stack
 
 - **Frontend:** [Next.js](https://nextjs.org/), [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
 - **Backend:** [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/)
-- **AI:** [OpenAI](https://openai.com/)
 - **Deployment:** [Fly.io](https://fly.io/). 
 
-Note on Fly: This was originally deployed in an AWS lambda, then GCS cloud run, then finally to Fly as I hoped that I could find a cloud provider who's IP range wasn't blocked by Youtube. I ended up going with a redisential proxy provider, but I kept the deployment in Fly given the generous egress traffic limit of ~160gb/month versus GCP's 1gb/month limit.
+Note on Fly: I've found that the smaller hosting companies tend to not have blanket IP range bans, and for a small app like this it was easier than terraform + an AWS lambda.  
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Prerequisites: Getting Costco Auth headers
 
-- [Node.js](https://nodejs.org/en) and [pnpm](https://pnpm.io/)
-- [Docker](https://www.docker.com/) (for local backend setup)
+So it turns out that with a mobile app, seeing what requests they're making is a *little* harder than pulling out dev tools on a desktop browser. How I went from app -> idiot-proofed curl commands was by doing the following:
+
+1. Extract the apk from an android device with google play, transfer to your desktop.
+2. Install `npm install -g apk-mitm` then modify your apk with: `apk-mitm Costco.apk`
+3. Boot up an android emulator, I used the android studio emulator. Install the modified apk on it, for the android Studio emulator I just drag and dropped it. 
+4. Run `./mitmweb --mode regular@8082`
+5. Go to the Extended Controls (the three dots on the emulator sidebar) -> Settings -> Proxy.
+6. Uncheck "Use Android Studio HTTP proxy settings", select Manual proxy configuration, and enter your computer's IP address and the proxy port.
+7. Install the cert as a user cert on the emulator, you can view instructions from the android emulator's browser by going to `http://mitm.it`
+8. From the mitmproxy site, find your the api calls, and copy then as curl
+9. From there you'll have the values for various requests in the .env folder
+
 
 ### Installation
 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/DavidZirinsky/tldw-site.git
-    cd tldw-site
+    git clone git@github.com:DavidZirinsky/costco-deals.git
+    cd costco-deals
     ```
 
 2.  **Setup Backend:**
@@ -47,40 +52,51 @@ Note on Fly: This was originally deployed in an AWS lambda, then GCS cloud run, 
       ```bash
       cp .env.example .env
       ```
-    - Fill in your `OPENAI_API_KEY` and other variables in the `.env` file.
+    - Fill in the variables in the `.env` file.
     - Run the backend server:
       ```bash
-      docker compose up -d && docker logs tldw -f
+      docker compose up -d && docker logs costco-deals -f
       ```
 
 3.  **Setup Frontend:**
     - In a new terminal, navigate to the frontend directory: `cd frontend`
     - Install dependencies:
       ```bash
-      pnpm install
+      npm install
       ```
     - Run the development server:
       ```bash
-      pnpm run dev
+      npm run dev
       ```
 
-## 🔍 Linting
+## 🤝 Pre-commit Hooks
 
-To run the linter and check for code quality, run the following command in the `frontend` directory:
+This project uses pre-commit hooks to ensure code quality and consistency before commits.
 
-```bash
-pnpm run lint
-```
+1.  **Install pre-commit:**
+    If you don't have `pre-commit` installed globally, you can install it into your virtual environment:
 
-## 🔧 Troubleshooting
+    ```bash
+    pip install pre-commit
+    ```
 
-### Common Issues
+2.  **Install the Git hooks:**
+    Navigate to the root of the repository and run:
 
-- **"Module not found" errors**: Make sure you've run `pnpm install` in the frontend directory
-- **Backend connection failed**: Ensure Docker is running and the backend container is up with `docker compose up -d`
-- **OpenAI API errors**: Check that your `OPENAI_API_KEY` is correctly set in the `.env` file
-- **Port already in use**: The frontend runs on port 3000 and backend on 8000. Kill any processes using these ports or change them in the configuration
-- **Docker permission denied**: On Linux, you may need to run Docker commands with `sudo` or add your user to the docker group
+    ```bash
+    pre-commit install
+    ```
+
+    This command sets up the hooks in your `.git/` directory.
+
+3.  **Run hooks manually (optional):**
+    To run all configured hooks against all files, without making a commit:
+    ```bash
+    pre-commit run --all-files
+    ```
+
+Now, every time you try to commit, the pre-commit hooks will automatically run. If any hook fails, the commit will be aborted, allowing you to fix the issues before committing.
+
 
 ## 🚀 Deployment
 
@@ -89,7 +105,7 @@ This project is configured for deployment on [Fly.io](https://fly.io/).
 1.  **Create a Fly.io app:**
 
     ```bash
-    fly apps create tl-dw
+    fly apps create 97costco
     ```
 
 2.  **Import secrets:**
