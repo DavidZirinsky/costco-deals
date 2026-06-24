@@ -1,43 +1,79 @@
-app docs can be seen: https://97costco.fly.dev/docs#/
+# 🏷️ Costco Deals - Browse Clearance & In-Warehouse Catalog
 
-# TL;DW - AI-Powered YouTube Video Summaries
+<img src="frontend/public/logo.png" alt="Costco Deals logo" height="300" />
 
-![TL;DW Logo](frontend/public/logo-tech.png)
+**97cost.co** is a site that lets you browse Costco clearance deals that are in your warehouse and available online. You can also browse Costco's in-warehouse catalog to help you price shop and plan for what's available. 
 
-**TL;DW** is a web application that saves you time by providing AI-powered summaries of YouTube videos. Paste a YouTube link and get the key takeaways instantly, without watching the whole video. See it in action [here](https://www.youtubetldw.com/)
+See it in action [here](https://www.97cost.co/).
 
-This utilizes the python [tldw](https://github.com/DavidZirinsky/tl-dw/) library on the backend to get the YouTube summaries.
+View the API docs [here](https://97costco.fly.dev/docs#/).
+
+Under the hood this involved reverse engineering the Costco mobile API, you can find more about that [here](#prerequisites-getting-costco-auth-headers)
+
+AI Disclosure: I used Gemini to help with the front end, the backend was all artisanally crafted by hand. As a backend focused developer, I find having a React project set up for me makes editing and getting a site off the ground a lot more manageable. I used Gemini as it's a model well known for it's React skills, and it was free, which was probably the biggest feature I needed.  
 
 ## ✨ Features
 
-- **AI-Powered Summaries:** Get concise and accurate summaries of any YouTube video.
-- **Streaming Responses:** See the summary generated in real-time.
-- **Sleek Interface:** A modern and user-friendly interface for a smooth experience.
-- **Time-Saving:** Avoids long intros, ads, and filler content to get straight to the point.
+- **Clearance Deals:** Find .97 clearance deals specific to your local warehouse.
+- **In-Warehouse Catalog:** Browse the full Costco catalog to price shop before visiting.
+- **Location Based:** Persists your preferred warehouse for tailored results.
+- **Reverse-Engineered API:** Directly hooks into the Costco mobile app API for real-time data.
+
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** [Next.js](https://nextjs.org/), [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
+- **Frontend:** [Vite](https://vitejs.dev/), [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
 - **Backend:** [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/)
-- **AI:** [OpenAI](https://openai.com/)
 - **Deployment:** [Fly.io](https://fly.io/). 
 
-Note on Fly: This was originally deployed in an AWS lambda, then GCS cloud run, then finally to Fly as I hoped that I could find a cloud provider who's IP range wasn't blocked by Youtube. I ended up going with a redisential proxy provider, but I kept the deployment in Fly given the generous egress traffic limit of ~160gb/month versus GCP's 1gb/month limit.
+Note on Fly: I've found that the smaller hosting companies tend to not have blanket IP range bans, and for a small app like this it was easier than terraform + an AWS lambda.  
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Prerequisites: Getting Costco Auth headers
 
-- [Node.js](https://nodejs.org/en) and [pnpm](https://pnpm.io/)
-- [Docker](https://www.docker.com/) (for local backend setup)
+So it turns out that with a mobile app, seeing what requests they're making is a *little* harder than pulling out dev tools on a desktop browser. How I went from app -> idiot-proofed curl commands was by doing the following:
+
+1.  **Extract the APK:**
+    Extract the apk from an Android device with Google Play, and transfer it to your desktop.
+
+2.  **Modify the APK:**
+    ```bash
+    npm install -g apk-mitm
+    apk-mitm Costco.apk
+    ```
+
+3.  **Boot up an Android emulator:**
+    I used the Android Studio emulator. Install the modified apk on it (for the Android Studio emulator, I just drag and dropped it).
+
+4.  **Run mitmweb:**
+    ```bash
+    ./mitmweb --mode regular@8082
+    ```
+
+5.  **Configure emulator proxy:**
+    Go to the Extended Controls (the three dots on the emulator sidebar) -> Settings -> Proxy.
+
+6.  **Set manual proxy:**
+    Uncheck "Use Android Studio HTTP proxy settings", select Manual proxy configuration, and enter your computer's IP address and the proxy port.
+
+7.  **Install the certificate:**
+    Install the cert as a user cert on the emulator. You can view instructions from the Android emulator's browser by going to `http://mitm.it`.
+
+8.  **Copy the API calls:**
+    From the mitmproxy site, find the API calls and copy them as curl commands.
+
+9.  **Update environment variables:**
+    From there, you'll have the values for various requests to populate your `.env` file.
+
 
 ### Installation
 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/DavidZirinsky/tldw-site.git
-    cd tldw-site
+    git clone git@github.com:DavidZirinsky/costco-deals.git
+    cd costco-deals
     ```
 
 2.  **Setup Backend:**
@@ -47,40 +83,59 @@ Note on Fly: This was originally deployed in an AWS lambda, then GCS cloud run, 
       ```bash
       cp .env.example .env
       ```
-    - Fill in your `OPENAI_API_KEY` and other variables in the `.env` file.
+    - Fill in the variables in the `.env` file.
     - Run the backend server:
       ```bash
-      docker compose up -d && docker logs tldw -f
+      docker compose up -d && docker logs costco-deals -f
       ```
 
 3.  **Setup Frontend:**
     - In a new terminal, navigate to the frontend directory: `cd frontend`
     - Install dependencies:
       ```bash
-      pnpm install
+      npm install
       ```
     - Run the development server:
       ```bash
-      pnpm run dev
+      npm run dev
       ```
 
-## 🔍 Linting
+## 🤝 Pre-commit Hooks
 
-To run the linter and check for code quality, run the following command in the `frontend` directory:
+This project uses pre-commit hooks to ensure code quality and consistency before commits.
 
-```bash
-pnpm run lint
-```
+1.  **Install pre-commit:**
+    If you don't have `pre-commit` installed globally, you can install it into your virtual environment:
+
+    ```bash
+    pip install pre-commit
+    ```
+
+2.  **Install the Git hooks:**
+    Navigate to the root of the repository and run:
+
+    ```bash
+    pre-commit install
+    ```
+
+    This command sets up the hooks in your `.git/` directory.
+
+3.  **Run hooks manually (optional):**
+    To run all configured hooks against all files, without making a commit:
+    ```bash
+    pre-commit run --all-files
+    ```
+
+Now, every time you try to commit, the pre-commit hooks will automatically run. If any hook fails, the commit will be aborted, allowing you to fix the issues before committing.
+
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
-- **"Module not found" errors**: Make sure you've run `pnpm install` in the frontend directory
 - **Backend connection failed**: Ensure Docker is running and the backend container is up with `docker compose up -d`
-- **OpenAI API errors**: Check that your `OPENAI_API_KEY` is correctly set in the `.env` file
-- **Port already in use**: The frontend runs on port 3000 and backend on 8000. Kill any processes using these ports or change them in the configuration
-- **Docker permission denied**: On Linux, you may need to run Docker commands with `sudo` or add your user to the docker group
+- **Missing Auth Headers**: If the API isn't returning data, ensure you've completed the [Prerequisites](#prerequisites-getting-costco-auth-headers) to get the necessary `.env` variables from the Costco app.
+- **Port already in use**: The frontend runs on port 5173 (Vite default) and backend on 8000. Kill any processes using these ports or change them in the configuration.
 
 ## 🚀 Deployment
 
@@ -89,7 +144,7 @@ This project is configured for deployment on [Fly.io](https://fly.io/).
 1.  **Create a Fly.io app:**
 
     ```bash
-    fly apps create tl-dw
+    fly apps create 97costco
     ```
 
 2.  **Import secrets:**
@@ -106,11 +161,11 @@ This project is configured for deployment on [Fly.io](https://fly.io/).
 
 ## 🤝 Contributing
 
-We welcome contributions to TL;DW! Here's how you can help:
+We welcome contributions to Costco Deals! Here's how you can help:
 
 1. **Fork the repository** and create your feature branch from `main`
 2. **Make your changes** following the existing code style and conventions
-3. **Test your changes** by running the linter: `pnpm run lint` in the frontend directory
+3. **Test your changes** by running the linter: `pre-commit run --all-files` in the root directory
 4. **Commit your changes** with a clear and descriptive commit message
 5. **Push to your fork** and submit a pull request
 
