@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Update with your actual domain name when deploying
+Sitemap: https:/97cost.co/sitemap.xml
