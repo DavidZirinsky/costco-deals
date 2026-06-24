@@ -12,7 +12,7 @@ Under the hood this involved reverse engineering the costco mobile API, you can 
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** [Next.js](https://nextjs.org/), [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
+- **Frontend:** [Vite](https://vitejs.dev/), [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/)
 - **Backend:** [FastAPI](https://fastapi.tiangolo.com/), [Python](https://www.python.org/)
 - **Deployment:** [Fly.io](https://fly.io/). 
 
@@ -121,11 +121,11 @@ This project is configured for deployment on [Fly.io](https://fly.io/).
 
 ## 🤝 Contributing
 
-We welcome contributions to TL;DW! Here's how you can help:
+We welcome contributions to Costco Deals! Here's how you can help:
 
 1. **Fork the repository** and create your feature branch from `main`
 2. **Make your changes** following the existing code style and conventions
-3. **Test your changes** by running the linter: `pnpm run lint` in the frontend directory
+3. **Test your changes** by running the linter: `pre-commit run --all-files` in the root directory
 4. **Commit your changes** with a clear and descriptive commit message
 5. **Push to your fork** and submit a pull request
 
