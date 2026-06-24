@@ -1,13 +1,23 @@
-# Costco Deals
-<img src="frontend/public/logo.png" alt="Coupon Clipper logo" height="300" />
+# 🏷️ Costco Deals - Browse Clearance & In-Warehouse Catalog
 
-**97cost.co** is a site that lets you browse costco clearance deals that are in your warehouse and available online. You can also browse costco's in warehouse catalog to help you price shop and plan for what's available. 
+<img src="frontend/public/logo.png" alt="Costco Deals logo" height="300" />
+
+**97cost.co** is a site that lets you browse Costco clearance deals that are in your warehouse and available online. You can also browse Costco's in-warehouse catalog to help you price shop and plan for what's available. 
 
 See it in action [here](https://www.97cost.co/).
 
-View the api docs [here](https://97costco.fly.dev/docs#/).
+View the API docs [here](https://97costco.fly.dev/docs#/).
 
-Under the hood this involved reverse engineering the costco mobile API, you can find more about that [here](#prerequisites-getting-costco-auth-headers)
+Under the hood this involved reverse engineering the Costco mobile API, you can find more about that [here](#prerequisites-getting-costco-auth-headers)
+
+AI Disclosure: I used Gemini to help with the front end, the backend was all artisanally crafted by hand. As a backend focused developer, I find having a React project set up for me makes editing and getting a site off the ground a lot more manageable. I used Gemini as it's a model well known for it's React skills, and it was free, which was probably the biggest feature I needed.  
+
+## ✨ Features
+
+- **Clearance Deals:** Find .97 clearance deals specific to your local warehouse.
+- **In-Warehouse Catalog:** Browse the full Costco catalog to price shop before visiting.
+- **Location Based:** Persists your preferred warehouse for tailored results.
+- **Reverse-Engineered API:** Directly hooks into the Costco mobile app API for real-time data.
 
 
 ## 🛠️ Tech Stack
@@ -118,6 +128,14 @@ This project uses pre-commit hooks to ensure code quality and consistency before
 
 Now, every time you try to commit, the pre-commit hooks will automatically run. If any hook fails, the commit will be aborted, allowing you to fix the issues before committing.
 
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+- **Backend connection failed**: Ensure Docker is running and the backend container is up with `docker compose up -d`
+- **Missing Auth Headers**: If the API isn't returning data, ensure you've completed the [Prerequisites](#prerequisites-getting-costco-auth-headers) to get the necessary `.env` variables from the Costco app.
+- **Port already in use**: The frontend runs on port 5173 (Vite default) and backend on 8000. Kill any processes using these ports or change them in the configuration.
 
 ## 🚀 Deployment
 
