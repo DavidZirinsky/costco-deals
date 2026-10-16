@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { transformProductData, transformSearchProductData } from '../utils/productUtils';
-import { ChevronUp, ChevronDown, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 
@@ -38,7 +38,6 @@ export default function ProductCatalogDashboard({
 
   const [clearanceScannerEnabled, setClearanceScannerEnabled] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
@@ -138,26 +137,11 @@ export default function ProductCatalogDashboard({
     return filtered;
   }, [data, searchTerm, selectedProgramTypes, clearanceScannerEnabled, dealsSortConfig, mode, selectedCategory]);
 
-  // Detect mobile for infinite scroll vs pagination
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Pagination
+  // Infinite scroll: show all items up to current page
   const totalPages = Math.ceil(processedData.length / PAGE_SIZE) || 1;
   const paginatedData = useMemo(() => {
-    if (isMobile) {
-      // Infinite scroll: show all items up to current page
-      return processedData.slice(0, currentPage * PAGE_SIZE);
-    }
-    // Desktop: traditional single-page view
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    return processedData.slice(start, end);
-  }, [processedData, currentPage, isMobile]);
+    return processedData.slice(0, currentPage * PAGE_SIZE);
+  }, [processedData, currentPage]);
 
   const hasMore = currentPage < totalPages;
 
@@ -174,24 +158,18 @@ export default function ProductCatalogDashboard({
   }, [totalPages]);
 
   useEffect(() => {
-    if (!isMobile || !sentinelRef.current) return;
+    if (!hasMore || !sentinelRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0]?.isIntersecting) {
           loadMore();
         }
       },
-      { rootMargin: '200px' }
+      { rootMargin: '300px' }
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [isMobile, loadMore]);
-
-  // Reset page when sort config changes from parent
-  React.useEffect(() => {
-    // eslint-disable-next-line
-    setCurrentPage(1);
-  }, [dealsSortConfig]);
+  }, [hasMore, loadMore, currentPage]);
 
   // Handlers
   const handleSort = (key: string) => {
@@ -394,53 +372,16 @@ export default function ProductCatalogDashboard({
           )}
         </div>
 
-        {/* Infinite scroll sentinel for mobile */}
-        {isMobile && hasMore && (
-          <div ref={sentinelRef} className="flex justify-center py-6">
-            <div className="text-sm text-gray-400 animate-pulse">Loading more...</div>
+        {/* Infinite scroll sentinel & status */}
+        {hasMore && (
+          <div ref={sentinelRef} className="flex flex-col items-center justify-center py-8">
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-costco-blue border-t-transparent mb-2"></div>
+            <span className="text-xs text-gray-400">Loading more items...</span>
           </div>
         )}
-        {isMobile && !hasMore && processedData.length > PAGE_SIZE && (
-          <div className="flex justify-center py-4">
+        {!hasMore && processedData.length > PAGE_SIZE && (
+          <div className="flex justify-center py-6">
             <span className="text-xs text-gray-400">All {processedData.length} items loaded</span>
-          </div>
-        )}
-
-        {/* Pagination Section */}
-        {processedData.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-xl shadow-sm">
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{Math.min((currentPage - 1) * PAGE_SIZE + 1, processedData.length)}</span> to{' '}
-                  <span className="font-medium">{Math.min(currentPage * PAGE_SIZE, processedData.length)}</span> of{' '}
-                  <span className="font-medium">{processedData.length}</span> results
-                </p>
-              </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                  >
-                    <span className="sr-only">Previous</span>
-                    Previous
-                  </button>
-                  <div className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0">
-                    Page {currentPage} of {totalPages}
-                  </div>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
-                  >
-                    <span className="sr-only">Next</span>
-                    Next
-                  </button>
-                </nav>
-              </div>
-            </div>
           </div>
         )}
       </div>
