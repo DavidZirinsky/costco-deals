@@ -312,7 +312,7 @@ function App() {
 
             {/* View Toggle & Feedback - Top Right */}
             <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-              <div className={`bg-gray-100 p-1 rounded-lg ${mode === 'deals' ? 'hidden sm:flex' : 'flex'}`}>
+              <div className="bg-gray-100 p-1 rounded-lg hidden sm:flex">
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
