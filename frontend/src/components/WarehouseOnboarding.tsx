@@ -1,5 +1,6 @@
 import React, { useState, FormEvent } from 'react';
-import { Search, MapPin, Clock, Navigation } from 'lucide-react';
+import { Search, MapPin, Clock, Navigation, Mail } from 'lucide-react';
+import FloatingFeedbackButton from './FloatingFeedbackButton';
 
 interface Warehouse {
   salesLocationId: string;
@@ -65,6 +66,18 @@ export default function WarehouseOnboarding({ onComplete }: WarehouseOnboardingP
       {/* Site Title */}
       <div className="absolute top-6 left-6">
         <h1 className="text-xl font-bold text-costco-blue tracking-tight whitespace-nowrap">Dave&apos;s Dank Costco Discoveries</h1>
+      </div>
+
+      {/* Feedback Link */}
+      <div className="absolute top-6 right-6">
+        <a
+          href="mailto:dzirinsky+feedback@gmail.com"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md transition-all hover:scale-105 active:scale-95"
+          title="Send Feedback"
+        >
+          <Mail className="w-4 h-4" />
+          <span>Send Feedback</span>
+        </a>
       </div>
 
       {/* Main Container */}

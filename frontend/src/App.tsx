@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, FormEvent } from 'react';
 import ProductCatalogDashboard from './components/ProductCatalogDashboard';
 import WarehouseOnboarding from './components/WarehouseOnboarding';
-import { LayoutGrid, List, Search } from 'lucide-react';
+import ContactPage from './components/ContactPage';
+import { LayoutGrid, List, Search, Mail } from 'lucide-react';
 
 // Sort options that map to the backend SortEnum + SortDirection
 const SEARCH_SORT_OPTIONS = [
@@ -35,6 +36,33 @@ function App() {
   const [searchSortIndex, setSearchSortIndex] = useState<number>(0); // index into SEARCH_SORT_OPTIONS
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [dealsSortConfig, setDealsSortConfig] = useState({ key: 'price', direction: 'asc' });
+  const [view, setView] = useState<'catalog' | 'contact'>(() => {
+    const hash = window.location.hash;
+    return hash === '#/contact' || hash === '#contact' ? 'contact' : 'catalog';
+  });
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#/contact' || hash === '#contact') {
+        setView('contact');
+      } else {
+        setView('catalog');
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  const navigateToContact = useCallback(() => {
+    window.location.hash = '#/contact';
+    setView('contact');
+  }, []);
+
+  const navigateToCatalog = useCallback(() => {
+    window.location.hash = '';
+    setView('catalog');
+  }, []);
   
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -146,6 +174,15 @@ function App() {
     }
   };
 
+  if (view === 'contact') {
+    return (
+      <ContactPage 
+        onBack={navigateToCatalog} 
+        warehouseName={warehouse?.name?.[0]?.value} 
+      />
+    );
+  }
+
   if (!warehouse) {
     return (
       <WarehouseOnboarding 
@@ -158,7 +195,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div className="App min-h-screen flex flex-col justify-between">
       {/* Mode Toggle Bar */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-3 sm:py-3 flex flex-col gap-2 sm:gap-3">
@@ -273,23 +310,35 @@ function App() {
               </form>
               )}
 
-            {/* View Toggle - Top Right */}
-            <div className={`bg-gray-100 p-1 rounded-lg ml-auto flex-shrink-0 ${mode === 'deals' ? 'hidden sm:flex' : 'flex'}`}>
+            {/* View Toggle & Feedback - Top Right */}
+            <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+              <div className={`bg-gray-100 p-1 rounded-lg ${mode === 'deals' ? 'hidden sm:flex' : 'flex'}`}>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-costco-blue' : 'text-gray-500 hover:text-gray-700'}`}
+                  title="Grid View"
+                >
+                  <LayoutGrid size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-white shadow-sm text-costco-blue' : 'text-gray-500 hover:text-gray-700'}`}
+                  title="Table View"
+                >
+                  <List size={18} />
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm text-costco-blue' : 'text-gray-500 hover:text-gray-700'}`}
-                title="Grid View"
+                onClick={navigateToContact}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm cursor-pointer"
+                title="Send Feedback"
               >
-                <LayoutGrid size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-md ${viewMode === 'table' ? 'bg-white shadow-sm text-costco-blue' : 'text-gray-500 hover:text-gray-700'}`}
-                title="Table View"
-              >
-                <List size={18} />
+                <Mail className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Feedback</span>
               </button>
             </div>
           </div>
@@ -298,45 +347,47 @@ function App() {
       </div>
 
       {/* Content Area */}
-      {loading ? (
-        <div className="min-h-[70vh] flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-costco-blue border-t-transparent mb-3"></div>
-            <div className="text-lg text-costco-blue font-semibold">
-              {mode === 'deals' ? 'Loading live deals...' : 'Searching Costco...'}
+      <div className="flex-1">
+        {loading ? (
+          <div className="min-h-[70vh] flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-costco-blue border-t-transparent mb-3"></div>
+              <div className="text-lg text-costco-blue font-semibold">
+                {mode === 'deals' ? 'Loading live deals...' : 'Searching Costco...'}
+              </div>
             </div>
           </div>
-        </div>
-      ) : error ? (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gray-50 text-gray-800 p-6">
-          <div className="bg-white p-8 rounded-xl shadow-sm border border-red-100 max-w-lg text-center">
-            <div className="text-4xl mb-4">⚠️</div>
-            <h2 className="text-xl font-bold text-costco-red mb-2">Failed to load data</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <p className="text-sm text-gray-500">Make sure your backend is running at {API_URL}</p>
+        ) : error ? (
+          <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gray-50 text-gray-800 p-6">
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-red-100 max-w-lg text-center">
+              <div className="text-4xl mb-4">⚠️</div>
+              <h2 className="text-xl font-bold text-costco-red mb-2">Failed to load data</h2>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <p className="text-sm text-gray-500">Make sure your backend is running at {API_URL}</p>
+            </div>
           </div>
-        </div>
-      ) : mode === 'search' && !searchSubmitted ? (
-        <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gray-50 text-gray-600 p-6">
-          <div className="text-center max-w-md">
-            <div className="text-6xl mb-4">🔍</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Search Costco Products</h2>
-            <p className="text-gray-500 leading-relaxed">
-              Find in-warehouse prices, stock status, and product availability.
-              Type a product name above and hit <span className="font-semibold text-costco-red">Search</span> to get started.
-            </p>
+        ) : mode === 'search' && !searchSubmitted ? (
+          <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gray-50 text-gray-600 p-6">
+            <div className="text-center max-w-md">
+              <div className="text-6xl mb-4">🔍</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Search Costco Products</h2>
+              <p className="text-gray-500 leading-relaxed">
+                Find in-warehouse prices, stock status, and product availability.
+                Type a product name above and hit <span className="font-semibold text-costco-red">Search</span> to get started.
+              </p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <ProductCatalogDashboard
-          rawData={products}
-          mode={mode}
-          searchTerm={mode === 'search' ? activeSearchTerm : searchQuery}
-          viewMode={viewMode}
-          dealsSortConfig={dealsSortConfig}
-          onDealsSortChange={(key, direction) => setDealsSortConfig({ key, direction })}
-        />
-      )}
+        ) : (
+          <ProductCatalogDashboard
+            rawData={products}
+            mode={mode}
+            searchTerm={mode === 'search' ? activeSearchTerm : searchQuery}
+            viewMode={viewMode}
+            dealsSortConfig={dealsSortConfig}
+            onDealsSortChange={(key, direction) => setDealsSortConfig({ key, direction })}
+          />
+        )}
+      </div>
     </div>
   );
 }
